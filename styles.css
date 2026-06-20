@@ -1,0 +1,582 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Roboto", Arial, sans-serif;
+}
+
+.player {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    margin: auto;
+
+    overflow: hidden;
+    border-radius: 12px;
+
+    background: black;
+
+    box-shadow:
+        0 15px 40px rgba(0, 0, 0, .4);
+
+    user-select: none;
+}
+
+.player video {
+    width: 100%;
+    display: block;
+}
+
+/* ===================== Pantalla completa ===================== */
+
+.player.is-fullscreen,
+.player:fullscreen,
+.player:-webkit-full-screen {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    border-radius: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.player.is-fullscreen video,
+.player:fullscreen video,
+.player:-webkit-full-screen video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* ===================== Estado vacío (sin video) ===================== */
+
+.empty-state {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    background: #181818;
+    color: rgba(255, 255, 255, .85);
+
+    cursor: pointer;
+}
+
+.player.has-video .empty-state {
+    display: none;
+}
+
+.empty-state-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .08);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 6px;
+}
+
+.empty-state-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+.empty-state-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.empty-state-subtitle {
+    font-size: 13px;
+    color: rgba(255, 255, 255, .5);
+    margin: 0;
+}
+
+.player.drag-over .empty-state {
+    background: #222;
+    outline: 2px dashed rgba(255, 255, 255, .4);
+    outline-offset: -10px;
+}
+
+.player:not(.has-video) .overlay-controls,
+.player:not(.has-video) .big-play,
+.player:not(.has-video) .center-flash,
+.player:not(.has-video) .spinner {
+    display: none;
+}
+
+/* ===================== Barra superior (título) ===================== */
+
+.top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    padding: 16px 18px;
+
+    background: linear-gradient(rgba(0, 0, 0, .65), transparent);
+
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+
+    pointer-events: none;
+
+    opacity: 1;
+    transition: opacity .25s ease;
+}
+
+.player.hide-controls .top-bar,
+.player:not(.has-video) .top-bar {
+    opacity: 0;
+}
+
+/* ===================== Overlay de controles ===================== */
+
+.overlay-controls {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    padding: 0 12px 6px;
+
+    background:
+        linear-gradient(transparent,
+            rgba(0, 0, 0, .8) 60%,
+            rgba(0, 0, 0, .85));
+
+    transition: opacity .25s ease;
+
+    opacity: 1;
+}
+
+.player.hide-controls .overlay-controls,
+.player.hide-controls .big-play {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.player.hide-controls {
+    cursor: none;
+}
+
+/* ===================== Barra de progreso ===================== */
+
+.progress-bar {
+    position: relative;
+    width: 100%;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.progress-track {
+    position: relative;
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, .25);
+    border-radius: 2px;
+    overflow: visible;
+    transition: height .12s ease;
+}
+
+.progress-bar:hover .progress-track,
+.progress-bar.dragging .progress-track {
+    height: 5px;
+}
+
+.progress-buffered {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: rgba(255, 255, 255, .4);
+    border-radius: 2px;
+}
+
+.progress-played {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: #ff0000;
+    border-radius: 2px;
+}
+
+.progress-thumb {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background: #ff0000;
+    border-radius: 50%;
+    transform: translate(50%, -50%) scale(0);
+    transition: transform .12s ease;
+}
+
+.progress-bar:hover .progress-thumb,
+.progress-bar.dragging .progress-thumb {
+    transform: translate(50%, -50%) scale(1);
+}
+
+.progress-tooltip {
+    position: absolute;
+    bottom: 16px;
+    transform: translateX(-50%);
+
+    background: rgba(28, 28, 28, .9);
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 4px;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .12s ease;
+    white-space: nowrap;
+}
+
+.progress-bar:hover .progress-tooltip,
+.progress-bar.dragging .progress-tooltip {
+    opacity: 1;
+}
+
+/* ===================== Fila inferior de controles ===================== */
+
+.bottom-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 44px;
+}
+
+.left-controls,
+.right-controls {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.control-btn {
+    position: relative;
+
+    border: none;
+    background: transparent;
+
+    color: white;
+
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 4px;
+
+    cursor: pointer;
+
+    transition: opacity .15s ease;
+    opacity: .9;
+}
+
+.control-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+.control-btn:hover {
+    opacity: 1;
+}
+
+.control-btn:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: -2px;
+}
+
+.seek-label {
+    position: absolute;
+    bottom: 3px;
+    right: 5px;
+    font-size: 8px;
+    font-weight: 700;
+    pointer-events: none;
+}
+
+/* ===================== Volumen ===================== */
+
+.volume-container {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+#volume {
+    width: 0;
+    opacity: 0;
+
+    -webkit-appearance: none;
+    appearance: none;
+    height: 3px;
+    background: rgba(255, 255, 255, .25);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+
+    transition: width .2s ease, opacity .2s ease, margin-left .2s ease;
+    margin-left: 0;
+}
+
+.volume-container:hover #volume,
+.volume-container:focus-within #volume {
+    width: 70px;
+    opacity: 1;
+    margin-left: 4px;
+}
+
+#volume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+}
+
+#volume::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: none;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+}
+
+#volume::-webkit-slider-runnable-track {
+    background: linear-gradient(to right,
+            white var(--vol, 100%),
+            rgba(255, 255, 255, .25) var(--vol, 100%));
+    height: 3px;
+    border-radius: 2px;
+}
+
+/* ===================== Tiempo ===================== */
+
+.time-display {
+    color: white;
+    font-size: 13px;
+    font-weight: 500;
+    margin-left: 8px;
+    white-space: nowrap;
+}
+
+/* ===================== Configuración / velocidad ===================== */
+
+.settings-container {
+    position: relative;
+}
+
+.settings-menu {
+    position: absolute;
+    bottom: 46px;
+    right: -4px;
+
+    background: rgba(28, 28, 28, .95);
+    border-radius: 8px;
+    padding: 6px 0;
+    min-width: 170px;
+
+    display: none;
+    flex-direction: column;
+
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .5);
+}
+
+.settings-menu.open {
+    display: flex;
+}
+
+.settings-menu-title {
+    color: rgba(255, 255, 255, .6);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+}
+
+.speed-option {
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 13px;
+    text-align: left;
+    padding: 8px 14px;
+    cursor: pointer;
+}
+
+.speed-option:hover {
+    background: rgba(255, 255, 255, .1);
+}
+
+.speed-option.active {
+    color: #3ea6ff;
+    font-weight: 600;
+}
+
+/* ===================== Botón grande de play central ===================== */
+
+.big-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+
+    background: rgba(0, 0, 0, .55);
+    border: none;
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+    transition: opacity .2s ease, background .15s ease, transform .15s ease;
+}
+
+.big-play svg {
+    width: 34px;
+    height: 34px;
+    margin-left: 2px;
+}
+
+.big-play:hover {
+    background: rgba(0, 0, 0, .75);
+}
+
+.player.is-playing .big-play {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(.85);
+}
+
+/* ===================== Destello central play/pausa ===================== */
+
+.center-flash {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(.8);
+
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+
+    background: rgba(0, 0, 0, .6);
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    opacity: 0;
+    pointer-events: none;
+}
+
+.center-flash svg {
+    width: 30px;
+    height: 30px;
+}
+
+.center-flash.flash {
+    animation: flash-pop .55s ease;
+}
+
+@keyframes flash-pop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.7);
+    }
+
+    25% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.15);
+    }
+}
+
+/* ===================== Spinner de carga ===================== */
+
+.spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 48px;
+    height: 48px;
+
+    border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, .25);
+    border-top-color: white;
+
+    opacity: 0;
+    pointer-events: none;
+    animation: spin .8s linear infinite;
+}
+
+.spinner.show {
+    opacity: 1;
+}
+
+@keyframes spin {
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* ===================== Responsive ===================== */
+
+@media (max-width: 480px) {
+
+    .time-display {
+        font-size: 11px;
+    }
+
+    #volume {
+        display: none;
+    }
+
+    .seek-label {
+        font-size: 7px;
+    }
+}
